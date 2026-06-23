@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Infographic Canvas Maker v6</title>
+    <title>Infographic Canvas Maker v7</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Kiwi+Maru&family=Noto+Sans+JP:wght@400;700&family=Noto+Serif+JP:wght@700&display=swap" rel="stylesheet">
     <style>
@@ -14,7 +14,8 @@
             overflow: hidden;
             touch-action: none;
         }
-        .canvas-container { max-height: calc(100vh - 380px); }
+        /* キャンバス表示エリアの高さ制限（これより小さくフィットさせる） */
+        .canvas-container { height: calc(100vh - 380px); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -22,21 +23,21 @@
 <body class="flex flex-col h-screen justify-between select-none">
 
     <header class="p-4 bg-[#1a1a1e] border-b border-[#2a2a30] flex justify-between items-center shrink-0">
-        <h1 class="text-base font-bold tracking-wider text-emerald-400">INFO_GRAPHIC.js v6</h1>
+        <h1 class="text-base font-bold tracking-wider text-emerald-400">INFO_GRAPHIC.js v7</h1>
         <div class="flex gap-2">
             <select id="export-size" class="bg-[#2a2a30] text-xs text-white rounded px-2 py-1 border border-[#3a3a40]">
                 <option value="1080x1080">SNS正方形 (1080x1080)</option>
-                <option value="1080x1920">SNS縦長 (1080x1920)</option>
+                <option value="1080x1920" selected>SNS縦長 (1080x1920)</option>
                 <option value="1200x630">WEBバナー (1200x630)</option>
-                <option value="842x595">A4横比率 (1191x842)</option>
+                <option value="1191x842">A4横比率 (1191x842)</option>
             </select>
             <button id="btn-save" class="bg-emerald-500 hover:bg-emerald-600 text-black text-xs font-bold px-3 py-1 rounded transition-all">保存</button>
         </div>
     </header>
 
     <main class="flex-1 flex items-center justify-center p-4 canvas-container bg-[#0e0e10] relative overflow-hidden">
-        <div class="relative shadow-2xl border border-[#2a2a30] rounded-lg overflow-hidden max-w-full max-h-full">
-            <canvas id="main-canvas" width="1080" height="1080" class="max-w-full max-h-full block bg-white aspect-square"></canvas>
+        <div class="relative shadow-2xl border border-[#2a2a30] rounded-lg overflow-hidden max-w-full h-full flex items-center justify-center">
+            <canvas id="main-canvas" width="1080" height="1920" style="aspect-ratio: 1080 / 1920;" class="max-w-full max-h-full block bg-white"></canvas>
         </div>
     </main>
 
@@ -64,13 +65,8 @@
                     <button onclick="setBg('pattern-three')" class="h-8 bg-zinc-700 rounded text-[9px] text-zinc-200 flex items-center justify-center font-bold">3段セクション</button>
                 </div>
                 <div class="flex flex-col gap-1">
-                    <span class="text-xs text-zinc-400">背景画像アップロード:</span>
                     <input type="file" id="bg-upload" accept="image/*" class="text-xs text-zinc-400 file:mr-2 file:bg-zinc-800 file:text-zinc-200 file:px-2 file:py-1 file:rounded mb-1">
                     <div id="bg-opacity-container" class="hidden bg-[#2a2a30]/40 p-2 rounded border border-[#2a2a30]">
-                        <div class="flex justify-between text-xs text-zinc-400 mb-1">
-                            <span>アップロード背景の不透明度</span>
-                            <span id="bg-opacity-value">100%</span>
-                        </div>
                         <input type="range" id="bg-image-opacity" min="0" max="1" step="0.05" value="1" class="w-full accent-emerald-500">
                     </div>
                 </div>
@@ -128,14 +124,14 @@
                         <span id="label-size-x">横幅 / サイズ</span>
                         <span id="val-size-x">1.00</span>
                     </div>
-                    <input type="range" id="object-size-x" min="10" max="1500" step="5" value="200" class="w-full accent-emerald-400">
+                    <input type="range" id="object-size-x" min="10" max="2000" step="5" value="200" class="w-full accent-emerald-400">
                 </div>
                 <div id="container-size-y" class="hidden">
                     <div class="flex justify-between text-[11px] text-zinc-400 mb-0.5">
                         <span id="label-size-y">縦幅</span>
                         <span id="val-size-y">1.00</span>
                     </div>
-                    <input type="range" id="object-size-y" min="10" max="1500" step="5" value="200" class="w-full accent-emerald-400">
+                    <input type="range" id="object-size-y" min="10" max="2000" step="5" value="200" class="w-full accent-emerald-400">
                 </div>
                 <div>
                     <div class="flex justify-between text-[11px] text-zinc-400 mb-0.5">
@@ -162,7 +158,7 @@
         const ctx = canvas.getContext('2d');
 
         let appState = {
-            bgType: 'solid', bgColor: '#ffffff', bgPattern: 'solid', bgImage: null, bgOpacity: 1,
+            bgType: 'pattern', bgColor: '#ffffff', bgPattern: 'pattern-grid', bgImage: null, bgOpacity: 1,
             layers: [], selectedLayerIndex: null, isDragging: false, startX: 0, startY: 0
         };
 
@@ -259,7 +255,9 @@
                     ctx.strokeStyle = '#e4e4e7'; ctx.lineWidth = 1;
                     for(let i=0; i<canvas.width; i+=40) {
                         ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
-                        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+                    }
+                    for(let j=0; j<canvas.height; j+=40) {
+                        ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(canvas.width, j); ctx.stroke();
                     }
                 } else if (appState.bgPattern === 'pattern-split') {
                     ctx.fillStyle = '#f4f4f5'; ctx.fillRect(0, 0, canvas.width / 2, canvas.height);
@@ -287,8 +285,8 @@
         function addText() {
             const txt = document.getElementById('text-input').value || 'テキスト';
             appState.layers.push({
-                type: 'text', text: txt, x: 200, y: 300, w: 60, h: 60, angle: 0, opacity: 1,
-                fontFamily: document.getElementById('text-font').value, color: document.getElementById('text-color').value, realW: 200, realH: 60
+                type: 'text', text: txt, x: 100, y: 200, w: 70, h: 70, angle: 0, opacity: 1,
+                fontFamily: document.getElementById('text-font').value, color: document.getElementById('text-color').value, realW: 200, realH: 70
             });
             appState.selectedLayerIndex = appState.layers.length - 1;
             render();
@@ -296,8 +294,8 @@
 
         function addShape(shapeType) {
             const color = document.getElementById('shape-color').value;
-            let item = { type: 'shape', shapeType: shapeType, x: 300, y: 300, color: color, w: 250, h: 250, angle: 0, opacity: 1 };
-            if (shapeType === 'line') { item.h = 20; item.w = 400; item.y = 400; }
+            let item = { type: 'shape', shapeType: shapeType, x: 150, y: 200, color: color, w: 300, h: 300, angle: 0, opacity: 1 };
+            if (shapeType === 'line') { item.h = 20; item.w = 500; item.y = 300; }
             appState.layers.push(item);
             appState.selectedLayerIndex = appState.layers.length - 1;
             render();
@@ -363,43 +361,45 @@
             const sizeYInput = document.getElementById('object-size-y');
             const containerY = document.getElementById('container-size-y');
 
+            // 最大値をキャンバスサイズ連動に拡張
+            const maxVal = Math.max(canvas.width, canvas.height, 2000);
+            sizeXInput.max = maxVal;
+            sizeYInput.max = maxVal;
+
             if (layer.type === 'shape' && layer.shapeType !== 'line') {
                 containerY.classList.remove('hidden');
                 document.getElementById('label-size-x').innerText = "幅 (横サイズ)";
                 document.getElementById('label-size-y').innerText = "高さ (縦サイズ)";
-                sizeXInput.min = 10; sizeXInput.max = 1080; sizeXInput.value = layer.w;
-                sizeYInput.min = 10; sizeYInput.max = 1080; sizeYInput.value = layer.h;
+                sizeXInput.value = layer.w; sizeYInput.value = layer.h;
                 document.getElementById('val-size-x').innerText = layer.w + " px";
                 document.getElementById('val-size-y').innerText = layer.h + " px";
             } else if (layer.type === 'shape' && layer.shapeType === 'line') {
                 containerY.classList.add('hidden');
                 document.getElementById('label-size-x').innerText = "線の長さ";
-                sizeXInput.min = 10; sizeXInput.max = 1080; sizeXInput.value = layer.w;
+                sizeXInput.value = layer.w;
                 document.getElementById('val-size-x').innerText = layer.w + " px";
             } else if (layer.type === 'text') {
                 containerY.classList.add('hidden');
                 document.getElementById('label-size-x').innerText = "文字サイズ";
-                sizeXInput.min = 10; sizeXInput.max = 300; sizeXInput.value = layer.w;
+                sizeXInput.max = 500;
+                sizeXInput.value = layer.w;
                 document.getElementById('val-size-x').innerText = layer.w + " pt";
             } else if (layer.type === 'image') {
                 containerY.classList.remove('hidden');
                 document.getElementById('label-size-x').innerText = "画像幅";
                 document.getElementById('label-size-y').innerText = "画像高さ";
-                sizeXInput.min = 10; sizeXInput.max = 1080; sizeXInput.value = layer.w;
-                sizeYInput.min = 10; sizeYInput.max = 1080; sizeYInput.value = layer.h;
+                sizeXInput.value = layer.w; sizeYInput.value = layer.h;
                 document.getElementById('val-size-x').innerText = layer.w + " px";
                 document.getElementById('val-size-y').innerText = layer.h + " px";
             }
         }
 
         function setupEventListeners() {
+            // 比率（aspect-ratio）を完全に内部ピクセルに追従させるイベント
             document.getElementById('export-size').addEventListener('change', (e) => {
                 const [w, h] = e.target.value.split('x').map(Number);
                 canvas.width = w; canvas.height = h;
-                canvas.className = "max-w-full max-h-full block bg-white";
-                if(w === h) canvas.style.aspectRatio = "1 / 1";
-                else if(w < h) canvas.style.aspectRatio = "1080 / 1920";
-                else canvas.style.aspectRatio = "1200 / 630";
+                canvas.style.aspectRatio = `${w} / ${h}`; // CSSアスペクト比を完全上書き
                 render();
             });
 
@@ -409,23 +409,12 @@
                 reader.onload = (el) => { 
                     const img = new Image(); 
                     img.onload = () => { 
-                        appState.bgType = 'image'; 
-                        appState.bgImage = img; 
-                        appState.bgOpacity = 1;
-                        document.getElementById('bg-image-opacity').value = 1;
-                        document.getElementById('bg-opacity-value').innerText = "100%";
-                        document.getElementById('bg-opacity-container').classList.remove('hidden');
-                        render(); 
+                        appState.bgType = 'image'; appState.bgImage = img; appState.bgOpacity = 1;
+                        document.getElementById('bg-opacity-container').classList.remove('hidden'); render(); 
                     }; 
                     img.src = el.target.result; 
                 };
                 reader.readAsDataURL(file);
-            });
-
-            document.getElementById('bg-image-opacity').addEventListener('input', (e) => {
-                appState.bgOpacity = parseFloat(e.target.value);
-                document.getElementById('bg-opacity-value').innerText = Math.round(appState.bgOpacity * 100) + '%';
-                render();
             });
 
             document.getElementById('layer-image-upload').addEventListener('change', (e) => {
@@ -434,8 +423,8 @@
                 reader.onload = (el) => {
                     const img = new Image();
                     img.onload = () => {
-                        let w = img.width, h = img.height; if (w > 400) { h = (400 / w) * h; w = 400; }
-                        appState.layers.push({ type: 'image', img: img, x: 200, y: 200, w: w, h: h, angle: 0, opacity: 1 });
+                        let w = img.width, h = img.height; if (w > 500) { h = (500 / w) * h; w = 500; }
+                        appState.layers.push({ type: 'image', img: img, x: 100, y: 100, w: w, h: h, angle: 0, opacity: 1 });
                         appState.selectedLayerIndex = appState.layers.length - 1; render();
                     };
                     img.src = el.target.result;
