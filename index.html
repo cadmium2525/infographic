@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Infographic Canvas Maker v5</title>
-    <!-- Tailwind CSS (CDN) -->
+    <title>Infographic Canvas Maker v6</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Kiwi+Maru&family=Noto+Sans+JP:wght@400;700&family=Noto+Serif+JP:wght@700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -23,9 +21,8 @@
 </head>
 <body class="flex flex-col h-screen justify-between select-none">
 
-    <!-- Header -->
     <header class="p-4 bg-[#1a1a1e] border-b border-[#2a2a30] flex justify-between items-center shrink-0">
-        <h1 class="text-base font-bold tracking-wider text-emerald-400">INFO_GRAPHIC.js v5</h1>
+        <h1 class="text-base font-bold tracking-wider text-emerald-400">INFO_GRAPHIC.js v6</h1>
         <div class="flex gap-2">
             <select id="export-size" class="bg-[#2a2a30] text-xs text-white rounded px-2 py-1 border border-[#3a3a40]">
                 <option value="1080x1080">SNS正方形 (1080x1080)</option>
@@ -37,20 +34,17 @@
         </div>
     </header>
 
-    <!-- Canvas Area -->
     <main class="flex-1 flex items-center justify-center p-4 canvas-container bg-[#0e0e10] relative overflow-hidden">
         <div class="relative shadow-2xl border border-[#2a2a30] rounded-lg overflow-hidden max-w-full max-h-full">
             <canvas id="main-canvas" width="1080" height="1080" class="max-w-full max-h-full block bg-white aspect-square"></canvas>
         </div>
     </main>
 
-    <!-- Control Panel -->
     <footer class="bg-[#1a1a1e] border-t border-[#2a2a30] p-4 shrink-0 z-10 shadow-up">
         
-        <!-- Tab Navigation -->
         <div class="flex justify-around border-b border-[#2a2a30] pb-2 mb-3 text-xs overflow-x-auto no-scrollbar gap-2">
             <button onclick="switchTab('tab-bg')" class="tab-btn px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 font-bold" id="btn-tab-bg">背景</button>
-            <button onclick="switchTab('tab-shape')" class="tab-btn px-3 py-1 rounded-full text-zinc-400" id="btn-tab-shape">図形・区切り</button>
+            <button onclick="switchTab('tab-shape')" class="tab-btn px-3 py-1 rounded-full text-zinc-400" id="btn-tab-shape">図形</button>
             <button onclick="switchTab('tab-text')" class="tab-btn px-3 py-1 rounded-full text-zinc-400" id="btn-tab-text">テキスト</button>
             <button onclick="switchTab('tab-image')" class="tab-btn px-3 py-1 rounded-full text-zinc-400" id="btn-tab-image">画像追加</button>
             <button onclick="switchTab('tab-layer')" class="tab-btn px-3 py-1 rounded-full text-zinc-400 relative" id="btn-tab-layer">
@@ -58,25 +52,30 @@
             </button>
         </div>
 
-        <!-- Tab Contents -->
         <div class="h-32 overflow-y-auto no-scrollbar text-sm">
-            <!-- 1. Background Settings -->
             <div id="tab-bg" class="tab-content flex flex-col gap-3">
                 <div class="grid grid-cols-4 gap-2">
                     <button onclick="setBg('solid', '#ffffff')" class="h-8 bg-white rounded border border-zinc-300"></button>
                     <button onclick="setBg('solid', '#f4f4f5')" class="h-8 bg-zinc-100 rounded border border-zinc-300"></button>
                     <button onclick="setBg('grad-modern')" class="h-8 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded text-[10px] text-white flex items-center justify-center font-bold">Modern</button>
                     <button onclick="setBg('grad-sunset')" class="h-8 bg-gradient-to-tr from-amber-500 to-rose-500 rounded text-[10px] text-white flex items-center justify-center font-bold">Sunset</button>
+                    <button onclick="setBg('pattern-grid')" class="h-8 bg-zinc-800 rounded text-[9px] text-zinc-400 flex items-center justify-center border border-dashed border-zinc-600">方眼グリッド</button>
+                    <button onclick="setBg('pattern-split')" class="h-8 bg-gradient-to-r from-zinc-200 to-zinc-400 rounded text-[9px] text-zinc-800 flex items-center justify-center font-bold">左右分割</button>
+                    <button onclick="setBg('pattern-three')" class="h-8 bg-zinc-700 rounded text-[9px] text-zinc-200 flex items-center justify-center font-bold">3段セクション</button>
                 </div>
                 <div class="flex flex-col gap-1">
+                    <span class="text-xs text-zinc-400">背景画像アップロード:</span>
                     <input type="file" id="bg-upload" accept="image/*" class="text-xs text-zinc-400 file:mr-2 file:bg-zinc-800 file:text-zinc-200 file:px-2 file:py-1 file:rounded mb-1">
                     <div id="bg-opacity-container" class="hidden bg-[#2a2a30]/40 p-2 rounded border border-[#2a2a30]">
+                        <div class="flex justify-between text-xs text-zinc-400 mb-1">
+                            <span>アップロード背景の不透明度</span>
+                            <span id="bg-opacity-value">100%</span>
+                        </div>
                         <input type="range" id="bg-image-opacity" min="0" max="1" step="0.05" value="1" class="w-full accent-emerald-500">
                     </div>
                 </div>
             </div>
 
-            <!-- 2. Shapes -->
             <div id="tab-shape" class="tab-content hidden flex flex-col gap-2">
                 <div class="grid grid-cols-3 gap-2">
                     <button onclick="addShape('rect')" class="p-2 bg-[#2a2a30] rounded text-xs text-center hover:bg-[#3a3a40]">■ 長方形</button>
@@ -89,7 +88,6 @@
                 </div>
             </div>
 
-            <!-- 3. Text -->
             <div id="tab-text" class="tab-content hidden flex flex-col gap-2">
                 <div class="flex gap-2">
                     <input type="text" id="text-input" placeholder="テキストを入力..." class="flex-1 bg-[#2a2a30] border border-[#3a3a40] rounded px-2 py-1 text-xs text-white focus:outline-none">
@@ -99,25 +97,23 @@
                     <select id="text-font" class="w-full bg-[#2a2a30] text-white rounded p-1 border border-[#3a3a40]">
                         <option value="'Noto Sans JP', sans-serif">モダンゴシック</option>
                         <option value="'Noto Serif JP', serif">洗練された明朝</option>
+                        <option value="'Kiwi Maru', serif">可愛い丸文字</option>
+                        <option value="'DotGothic16', sans-serif">レトロドット</option>
                     </select>
                     <input type="color" id="text-color" value="#18181b" class="w-full bg-transparent border-0 h-6 cursor-pointer">
                 </div>
             </div>
 
-            <!-- 4. Image Upload -->
             <div id="tab-image" class="tab-content hidden flex flex-col gap-3">
                 <input type="file" id="layer-image-upload" accept="image/*" class="text-xs text-zinc-400 file:mr-2 file:bg-zinc-800 file:text-zinc-200 file:px-2 file:py-1 file:rounded">
             </div>
 
-            <!-- 5. Layers Management -->
             <div id="tab-layer" class="tab-content hidden flex flex-col gap-2">
                 <div id="layer-list" class="flex flex-col gap-1 max-h-24 overflow-y-auto"></div>
             </div>
         </div>
 
-        <!-- ユニバーサルコントローラー（拡張版） -->
         <div id="universal-sliders" class="hidden mt-2 pt-2 border-t border-[#2a2a30] flex flex-col gap-2">
-            <!-- 角度調整（すべてのオブジェクト共通） -->
             <div>
                 <div class="flex justify-between text-[11px] text-zinc-400 mb-0.5">
                     <span>回転角度</span>
@@ -126,8 +122,7 @@
                 <input type="range" id="object-angle" min="0" max="360" step="1" value="0" class="w-full accent-emerald-400">
             </div>
 
-            <!-- 独立サイズスライダー（図形の場合は幅・高さ、その他は全体の大きさ） -->
-            <div id="size-control-dynamic" class="grid grid-cols-1 gap-2">
+            <div id="size-control-dynamic" class="grid grid-cols-1 gap-1.5">
                 <div id="container-size-x">
                     <div class="flex justify-between text-[11px] text-zinc-400 mb-0.5">
                         <span id="label-size-x">横幅 / サイズ</span>
@@ -142,16 +137,22 @@
                     </div>
                     <input type="range" id="object-size-y" min="10" max="1500" step="5" value="200" class="w-full accent-emerald-400">
                 </div>
+                <div>
+                    <div class="flex justify-between text-[11px] text-zinc-400 mb-0.5">
+                        <span>オブジェクト不透明度</span>
+                        <span id="opacity-slider-value">100%</span>
+                    </div>
+                    <input type="range" id="object-opacity" min="0" max="1" step="0.05" value="1" class="w-full accent-emerald-400">
+                </div>
             </div>
         </div>
 
-        <!-- ユニバーサルインスペクター -->
         <div id="inspector" class="hidden mt-2 pt-2 border-t border-[#2a2a30] flex items-center justify-between text-xs text-zinc-400">
             <span id="inspector-title">選択中</span>
-            <div class="flex gap-2">
-                <button onclick="moveLayerOrder('up')" class="bg-[#2a2a30] px-2 py-1 rounded text-white hover:bg-[#3a3a40]">前面へ</button>
-                <button onclick="moveLayerOrder('down')" class="bg-[#2a2a30] px-2 py-1 rounded text-white hover:bg-[#3a3a40]">背面へ</button>
-                <button onclick="deleteSelectedLayer()" class="bg-rose-900/40 text-rose-400 px-2 py-1 rounded font-bold">削除</button>
+            <div class="flex gap-1.5">
+                <button onclick="moveLayerOrder('up')" class="bg-[#2a2a30] px-2 py-1 rounded text-white hover:bg-[#3a3a40] text-[11px]">前面へ</button>
+                <button onclick="moveLayerOrder('down')" class="bg-[#2a2a30] px-2 py-1 rounded text-white hover:bg-[#3a3a40] text-[11px]">背面へ</button>
+                <button onclick="deleteSelectedLayer()" class="bg-rose-950 text-rose-400 px-2 py-1 rounded font-bold text-[11px] border border-rose-900/50">レイヤー削除</button>
             </div>
         </div>
     </footer>
@@ -174,7 +175,6 @@
             document.getElementById(`btn-${tabId}`).classList.add('bg-emerald-500/10', 'text-emerald-400', 'font-bold');
         }
 
-        // --- 回転と独立サイズ対応の描画システム ---
         function render() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawBackground();
@@ -182,21 +182,17 @@
             appState.layers.forEach((layer, index) => {
                 ctx.save();
                 
-                // 1. 各レイヤーの基準点（中心点）の算出
                 let cx = layer.x + layer.w / 2;
                 let cy = layer.y + layer.h / 2;
                 
-                // 2. キャンバスの座標系を配置中心にずらして回転を適用
                 ctx.translate(cx, cy);
-                if (layer.angle) {
-                    ctx.rotate((layer.angle * Math.PI) / 180);
-                }
+                if (layer.angle) ctx.rotate((layer.angle * Math.PI) / 180);
                 ctx.translate(-cx, -cy);
 
                 ctx.globalAlpha = layer.opacity !== undefined ? layer.opacity : 1;
 
                 if (layer.type === 'text') {
-                    ctx.font = `${layer.w}px ${layer.fontFamily}`; // テキストはwパラメータをフォントサイズとして扱う
+                    ctx.font = `${layer.w}px ${layer.fontFamily}`;
                     ctx.fillStyle = layer.color;
                     ctx.textBaseline = 'top';
                     ctx.fillText(layer.text, layer.x, layer.y);
@@ -215,7 +211,6 @@
                         layer.realW = layer.w; layer.realH = layer.h;
                     } else if (layer.shapeType === 'circle') {
                         ctx.beginPath();
-                        // 楕円描画に対応（ellipseメソッドを採用）
                         ctx.ellipse(layer.x + layer.w/2, layer.y + layer.h/2, layer.w/2, layer.h/2, 0, 0, Math.PI * 2);
                         ctx.fill();
                         layer.realW = layer.w; layer.realH = layer.h;
@@ -232,10 +227,8 @@
                     layer.realW = layer.w; layer.realH = layer.h;
                 }
 
-                // 選択中枠線のオーバレイ表示（回転状態を維持した枠線）
                 if (index === appState.selectedLayerIndex) {
                     ctx.restore(); ctx.save();
-                    // 再び同じ回転マトリクスを適用してバウンディングボックスを描画
                     ctx.translate(cx, cy);
                     if (layer.angle) ctx.rotate((layer.angle * Math.PI) / 180);
                     ctx.translate(-cx, -cy);
@@ -261,6 +254,22 @@
                 if (appState.bgPattern === 'grad-modern') { grad.addColorStop(0, '#6366f1'); grad.addColorStop(1, '#a855f7'); }
                 else { grad.addColorStop(0, '#f59e0b'); grad.addColorStop(1, '#f43f5e'); }
                 ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else if (appState.bgType === 'pattern') {
+                if (appState.bgPattern === 'pattern-grid') {
+                    ctx.strokeStyle = '#e4e4e7'; ctx.lineWidth = 1;
+                    for(let i=0; i<canvas.width; i+=40) {
+                        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+                    }
+                } else if (appState.bgPattern === 'pattern-split') {
+                    ctx.fillStyle = '#f4f4f5'; ctx.fillRect(0, 0, canvas.width / 2, canvas.height);
+                    ctx.fillStyle = '#e4e4e7'; ctx.fillRect(canvas.width / 2, 0, canvas.width / 2, canvas.height);
+                } else if (appState.bgPattern === 'pattern-three') {
+                    const h = canvas.height / 3;
+                    ctx.fillStyle = '#f8fafc'; ctx.fillRect(0, 0, canvas.width, h);
+                    ctx.fillStyle = '#f1f5f9'; ctx.fillRect(0, h, canvas.width, h);
+                    ctx.fillStyle = '#e2e8f0'; ctx.fillRect(0, h*2, canvas.width, h);
+                }
             } else if (appState.bgType === 'image' && appState.bgImage) {
                 ctx.save(); ctx.globalAlpha = appState.bgOpacity;
                 ctx.drawImage(appState.bgImage, 0, 0, canvas.width, canvas.height); ctx.restore();
@@ -269,7 +278,9 @@
 
         function setBg(type, val) {
             if (type === 'solid') { appState.bgType = 'solid'; appState.bgColor = val; }
+            else if (type.startsWith('pattern-')) { appState.bgType = 'pattern'; appState.bgPattern = type; }
             else { appState.bgType = 'gradient'; appState.bgPattern = type; }
+            if (type !== 'image') document.getElementById('bg-opacity-container').classList.add('hidden');
             render();
         }
 
@@ -314,20 +325,22 @@
         function updateLayerUI() {
             document.getElementById('layer-count').innerText = appState.layers.length;
             const container = document.getElementById('layer-list'); container.innerHTML = '';
-            if (appState.layers.length === 0) return;
+            if (appState.layers.length === 0) {
+                container.innerHTML = `<p class="text-xs text-zinc-500 text-center py-2">オブジェクトがありません</p>`;
+                return;
+            }
 
             [...appState.layers].reverse().forEach((layer, revIdx) => {
                 const actualIdx = appState.layers.length - 1 - revIdx;
                 const isSelected = actualIdx === appState.selectedLayerIndex;
                 const item = document.createElement('div');
-                item.className = `flex justify-between items-center p-1.5 rounded text-xs cursor-pointer ${isSelected ? 'bg-emerald-400 text-black font-bold' : 'bg-[#2a2a30] text-zinc-300'}`;
+                item.className = `flex justify-between items-center p-1.5 rounded text-[11px] cursor-pointer ${isSelected ? 'bg-emerald-400 text-black font-bold' : 'bg-[#2a2a30] text-zinc-300'}`;
                 item.innerText = `${actualIdx + 1}. [${layer.type}] ${layer.text || layer.shapeType || '画像'}`;
                 item.onclick = () => { appState.selectedLayerIndex = actualIdx; render(); };
                 container.appendChild(item);
             });
         }
 
-        // 動的スライダーコントロールの出し分け
         function updateControlSlidersUI() {
             const inspector = document.getElementById('inspector');
             const slidersContainer = document.getElementById('universal-sliders');
@@ -340,39 +353,35 @@
             inspector.classList.remove('hidden'); slidersContainer.classList.remove('hidden');
             document.getElementById('inspector-title').innerText = `設定: [${layer.type}]`;
 
-            // 角度値の同期
             document.getElementById('object-angle').value = layer.angle || 0;
             document.getElementById('angle-slider-value').innerText = (layer.angle || 0) + '°';
+            
+            document.getElementById('object-opacity').value = layer.opacity !== undefined ? layer.opacity : 1;
+            document.getElementById('opacity-slider-value').innerText = Math.round((layer.opacity !== undefined ? layer.opacity : 1) * 100) + '%';
 
             const sizeXInput = document.getElementById('object-size-x');
             const sizeYInput = document.getElementById('object-size-y');
             const containerY = document.getElementById('container-size-y');
 
             if (layer.type === 'shape' && layer.shapeType !== 'line') {
-                // 長方形・円の場合は縦横を完全に独立制御
                 containerY.classList.remove('hidden');
                 document.getElementById('label-size-x').innerText = "幅 (横サイズ)";
                 document.getElementById('label-size-y').innerText = "高さ (縦サイズ)";
-                
                 sizeXInput.min = 10; sizeXInput.max = 1080; sizeXInput.value = layer.w;
                 sizeYInput.min = 10; sizeYInput.max = 1080; sizeYInput.value = layer.h;
-                
                 document.getElementById('val-size-x').innerText = layer.w + " px";
                 document.getElementById('val-size-y').innerText = layer.h + " px";
             } else if (layer.type === 'shape' && layer.shapeType === 'line') {
-                // 直線は長さのみ
                 containerY.classList.add('hidden');
                 document.getElementById('label-size-x').innerText = "線の長さ";
                 sizeXInput.min = 10; sizeXInput.max = 1080; sizeXInput.value = layer.w;
                 document.getElementById('val-size-x').innerText = layer.w + " px";
             } else if (layer.type === 'text') {
-                // テキストはフォントサイズ単一制御
                 containerY.classList.add('hidden');
                 document.getElementById('label-size-x').innerText = "文字サイズ";
-                sizeXInput.min = 10; sizeXInput.max = 300; sizeXInput.value = layer.w; // テキストではwがサイズ
+                sizeXInput.min = 10; sizeXInput.max = 300; sizeXInput.value = layer.w;
                 document.getElementById('val-size-x').innerText = layer.w + " pt";
             } else if (layer.type === 'image') {
-                // 画像も独立して縦横変更できるように開放
                 containerY.classList.remove('hidden');
                 document.getElementById('label-size-x').innerText = "画像幅";
                 document.getElementById('label-size-y').innerText = "画像高さ";
@@ -399,10 +408,24 @@
                 const reader = new FileReader();
                 reader.onload = (el) => { 
                     const img = new Image(); 
-                    img.onload = () => { appState.bgType = 'image'; appState.bgImage = img; render(); }; 
+                    img.onload = () => { 
+                        appState.bgType = 'image'; 
+                        appState.bgImage = img; 
+                        appState.bgOpacity = 1;
+                        document.getElementById('bg-image-opacity').value = 1;
+                        document.getElementById('bg-opacity-value').innerText = "100%";
+                        document.getElementById('bg-opacity-container').classList.remove('hidden');
+                        render(); 
+                    }; 
                     img.src = el.target.result; 
                 };
                 reader.readAsDataURL(file);
+            });
+
+            document.getElementById('bg-image-opacity').addEventListener('input', (e) => {
+                appState.bgOpacity = parseFloat(e.target.value);
+                document.getElementById('bg-opacity-value').innerText = Math.round(appState.bgOpacity * 100) + '%';
+                render();
             });
 
             document.getElementById('layer-image-upload').addEventListener('change', (e) => {
@@ -420,7 +443,6 @@
                 reader.readAsDataURL(file);
             });
 
-            // 角度スライダーイベント
             document.getElementById('object-angle').addEventListener('input', (e) => {
                 if (appState.selectedLayerIndex !== null) {
                     appState.layers[appState.selectedLayerIndex].angle = parseInt(e.target.value);
@@ -428,20 +450,23 @@
                 }
             });
 
-            // 動的横幅・サイズ変更スライダーイベント
             document.getElementById('object-size-x').addEventListener('input', (e) => {
                 if (appState.selectedLayerIndex !== null) {
-                    const layer = appState.layers[appState.selectedLayerIndex];
-                    layer.w = parseInt(e.target.value);
+                    appState.layers[appState.selectedLayerIndex].w = parseInt(e.target.value);
                     render();
                 }
             });
 
-            // 動的縦幅変更スライダーイベント
             document.getElementById('object-size-y').addEventListener('input', (e) => {
                 if (appState.selectedLayerIndex !== null) {
-                    const layer = appState.layers[appState.selectedLayerIndex];
-                    layer.h = parseInt(e.target.value);
+                    appState.layers[appState.selectedLayerIndex].h = parseInt(e.target.value);
+                    render();
+                }
+            });
+
+            document.getElementById('object-opacity').addEventListener('input', (e) => {
+                if (appState.selectedLayerIndex !== null) {
+                    appState.layers[appState.selectedLayerIndex].opacity = parseFloat(e.target.value);
                     render();
                 }
             });
@@ -453,7 +478,6 @@
                 appState.selectedLayerIndex = prev; render();
             });
 
-            // タップ位置計算（逆行列なしの簡易ヒットテスト。非回転時の矩形で判定します）
             const getCanvasCoords = (e) => {
                 const rect = canvas.getBoundingClientRect();
                 const clX = e.touches ? e.touches[0].clientX : e.clientX;
