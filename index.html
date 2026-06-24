@@ -12,7 +12,18 @@
             background-color: #121214;
             color: #e3e3e6;
             overflow: hidden;
+            /* touch-action: none はキャンバスのみに限定 */
+        }
+        #main-canvas {
             touch-action: none;
+        }
+        /* フッターはタッチスクロールを明示的に許可 */
+        .footer-fixed {
+            touch-action: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .footer-fixed input[type="range"] {
+            touch-action: pan-x;
         }
         /* ② フッターを固定して常に表示 */
         .app-layout {
@@ -336,6 +347,12 @@
         setupEventListeners();
         setupImageEditor();
         render();
+
+        // フッター内のタッチはキャンバスのドラッグ処理に伝播させない
+        const footer = document.querySelector('.footer-fixed');
+        footer.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
+        footer.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true });
+        footer.addEventListener('touchend', (e) => e.stopPropagation(), { passive: true });
     });
 
     function switchTab(tabId) {
@@ -343,11 +360,6 @@
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('bg-emerald-500/10', 'text-emerald-400', 'font-bold'));
         document.getElementById(tabId).classList.remove('hidden');
         document.getElementById(`btn-${tabId}`).classList.add('bg-emerald-500/10', 'text-emerald-400', 'font-bold');
-
-        // ⑤ 図形タブ選択時に角丸スライダー表示制御
-        if (tabId === 'tab-shape') {
-            updateCornerRadiusRow();
-        }
     }
 
     function render() {
