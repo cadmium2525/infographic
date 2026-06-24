@@ -7,30 +7,33 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Kiwi+Maru&family=Noto+Sans+JP:wght@400;700&family=Noto+Serif+JP:wght@700&display=swap" rel="stylesheet">
     <style>
-        body {
+        html, body {
             font-family: 'Noto Sans JP', sans-serif;
             background-color: #121214;
             color: #e3e3e6;
             overflow: hidden;
-            /* touch-action: none はキャンバスのみに限定 */
+            margin: 0; padding: 0;
+            /* iOSのSafariツールバーを除いた実際の表示高さをJS側でセットする */
+            height: 100%;
         }
         #main-canvas {
             touch-action: none;
         }
         /* フッターはタッチスクロールを明示的に許可 */
         .footer-fixed {
-            touch-action: auto;
+            touch-action: pan-y;
             -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
         }
         .footer-fixed input[type="range"] {
             touch-action: pan-x;
         }
-        /* ② フッターを固定して常に表示 */
         .app-layout {
             display: flex;
             flex-direction: column;
-            height: 100dvh;
-            height: 100vh;
+            /* JSがセットするCSS変数 --app-height を使用 */
+            height: var(--app-height, 100%);
+            overflow: hidden;
         }
         .canvas-area {
             flex: 1;
@@ -39,7 +42,8 @@
         }
         .footer-fixed {
             flex-shrink: 0;
-            max-height: 55vh;
+            /* フッターの最大高さもCSS変数で動的制御 */
+            max-height: var(--footer-max-height, 260px);
             overflow-y: auto;
         }
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -324,6 +328,19 @@
 <script>
     const canvas = document.getElementById('main-canvas');
     const ctx = canvas.getContext('2d');
+
+    // iOSのSafariツールバーを考慮した実際の表示高さをCSS変数にセット
+    function setAppHeight() {
+        const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        const footerMax = Math.max(200, Math.min(280, Math.floor(h * 0.42)));
+        document.documentElement.style.setProperty('--app-height', h + 'px');
+        document.documentElement.style.setProperty('--footer-max-height', footerMax + 'px');
+    }
+    setAppHeight();
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', setAppHeight);
+    }
+    window.addEventListener('resize', setAppHeight);
 
     let appState = {
         bgType: 'pattern', bgColor: '#ffffff', bgPattern: 'pattern-grid', bgImage: null, bgOpacity: 1,
