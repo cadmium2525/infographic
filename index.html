@@ -239,10 +239,14 @@
 
             <!-- テキストタブ -->
             <div id="tab-text" class="tab-content hidden flex flex-col gap-2">
+                <!-- テキストエリア（改行対応） -->
                 <div class="flex gap-2">
-                    <input type="text" id="text-input" placeholder="テキストを入力..." class="flex-1 bg-[#2a2a30] border border-[#3a3a40] rounded px-2 py-1 text-xs text-white focus:outline-none">
-                    <button onclick="addText()" class="bg-emerald-500 text-black px-3 py-1 rounded font-bold text-xs shrink-0">追加</button>
+                    <textarea id="text-input" placeholder="テキストを入力&#10;（改行OK）" rows="3"
+                        class="flex-1 bg-[#2a2a30] border border-[#3a3a40] rounded px-2 py-1 text-xs text-white focus:outline-none resize-y"
+                        style="touch-action:auto; min-height:52px; max-height:120px;"></textarea>
+                    <button onclick="addText()" class="bg-emerald-500 text-black px-3 py-1 rounded font-bold text-xs shrink-0 self-start">追加</button>
                 </div>
+                <!-- フォント・カラー -->
                 <div class="grid grid-cols-2 gap-2 text-xs">
                     <select id="text-font" class="w-full bg-[#2a2a30] text-white rounded p-1 border border-[#3a3a40]">
                         <option value="'Noto Sans JP', sans-serif">モダンゴシック</option>
@@ -250,7 +254,32 @@
                         <option value="'Kiwi Maru', serif">可愛い丸文字</option>
                         <option value="'DotGothic16', sans-serif">レトロドット</option>
                     </select>
-                    <input type="color" id="text-color" value="#18181b" class="w-full bg-transparent border-0 h-6 cursor-pointer">
+                    <div class="flex items-center gap-1">
+                        <span class="text-zinc-400 text-[10px] shrink-0">色</span>
+                        <input type="color" id="text-color" value="#18181b" class="flex-1 bg-transparent border-0 h-7 cursor-pointer">
+                    </div>
+                </div>
+                <!-- スタイル（太字・斜体・下線） -->
+                <div class="flex gap-1.5 text-xs">
+                    <button id="btn-bold" onclick="toggleTextStyle('bold')"
+                        class="text-style-btn flex-1 py-1 rounded border border-[#3a3a40] bg-[#2a2a30] text-zinc-300 font-bold">B</button>
+                    <button id="btn-italic" onclick="toggleTextStyle('italic')"
+                        class="text-style-btn flex-1 py-1 rounded border border-[#3a3a40] bg-[#2a2a30] text-zinc-300 italic">I</button>
+                    <button id="btn-underline" onclick="toggleTextStyle('underline')"
+                        class="text-style-btn flex-1 py-1 rounded border border-[#3a3a40] bg-[#2a2a30] text-zinc-300 underline">U</button>
+                    <!-- 行揃え -->
+                    <button id="btn-align-left" onclick="setTextAlign('left')"
+                        class="text-align-btn flex-1 py-1 rounded border border-[#3a3a40] bg-[#2a2a30] text-zinc-300 text-[11px]">≡L</button>
+                    <button id="btn-align-center" onclick="setTextAlign('center')"
+                        class="text-align-btn flex-1 py-1 rounded border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 text-[11px]">≡C</button>
+                    <button id="btn-align-right" onclick="setTextAlign('right')"
+                        class="text-align-btn flex-1 py-1 rounded border border-[#3a3a40] bg-[#2a2a30] text-zinc-300 text-[11px]">≡R</button>
+                </div>
+                <!-- 行間スライダー -->
+                <div class="flex items-center gap-2 text-[11px] text-zinc-400">
+                    <span class="shrink-0">行間</span>
+                    <input type="range" id="text-line-height" min="0.8" max="3.0" step="0.1" value="1.4" class="flex-1 accent-emerald-500">
+                    <span id="text-line-height-value" class="shrink-0 w-8 text-right">1.4</span>
                 </div>
             </div>
 
@@ -288,6 +317,14 @@
                         <span id="val-size-x">1.00</span>
                     </div>
                     <input type="range" id="object-size-x" min="10" max="2000" step="5" value="200" class="w-full accent-emerald-400">
+                </div>
+                <!-- テキスト専用：テキストエリア幅 -->
+                <div id="container-text-width" class="hidden">
+                    <div class="flex justify-between text-[11px] text-zinc-400 mb-0.5">
+                        <span>テキストエリア幅</span>
+                        <span id="val-text-width">600 px</span>
+                    </div>
+                    <input type="range" id="object-text-width" min="50" max="2000" step="10" value="600" class="w-full accent-emerald-400">
                 </div>
                 <div id="container-size-y" class="hidden">
                     <div class="flex justify-between text-[11px] text-zinc-400 mb-0.5">
@@ -396,13 +433,67 @@
             ctx.globalAlpha = layer.opacity !== undefined ? layer.opacity : 1;
 
             if (layer.type === 'text') {
-                ctx.font = `${layer.w}px ${layer.fontFamily}`;
+                ctx.font = `${layer.italic ? 'italic ' : ''}${layer.bold ? 'bold ' : ''}${layer.w}px ${layer.fontFamily}`;
                 ctx.fillStyle = layer.color;
                 ctx.textBaseline = 'top';
-                ctx.fillText(layer.text, layer.x, layer.y);
-                const metrics = ctx.measureText(layer.text);
-                layer.realW = metrics.width;
-                layer.realH = layer.w;
+                const lh = (layer.lineHeight || 1.4) * layer.w;
+                const areaW = layer.textWidth || 0; // 0 = 折り返しなし
+                const align = layer.align || 'left';
+                ctx.textAlign = align;
+
+                // 入力行をさらにtextWidthで折り返す
+                const inputLines = (layer.text || '').split('\n');
+                const drawLines = [];
+                inputLines.forEach(inputLine => {
+                    if (areaW > 0 && ctx.measureText(inputLine).width > areaW) {
+                        // 折り返し処理
+                        const words = inputLine.split('');
+                        let current = '';
+                        for (const ch of words) {
+                            const test = current + ch;
+                            if (ctx.measureText(test).width > areaW && current.length > 0) {
+                                drawLines.push(current);
+                                current = ch;
+                            } else {
+                                current = test;
+                            }
+                        }
+                        if (current) drawLines.push(current);
+                    } else {
+                        drawLines.push(inputLine);
+                    }
+                });
+
+                // realW: テキストエリア幅が設定されていればそれ、なければ最長行幅
+                let maxW = 0;
+                drawLines.forEach(line => { maxW = Math.max(maxW, ctx.measureText(line).width); });
+                layer.realW = areaW > 0 ? areaW : maxW || layer.w;
+                layer.realH = lh * drawLines.length;
+
+                // align基準のx座標
+                const alignX = align === 'center' ? layer.x + layer.realW / 2
+                             : align === 'right'  ? layer.x + layer.realW
+                             : layer.x;
+
+                drawLines.forEach((line, i) => {
+                    const lineY = layer.y + i * lh;
+                    ctx.fillText(line, alignX, lineY);
+                    if (layer.underline) {
+                        const lw = ctx.measureText(line).width;
+                        const ux = align === 'center' ? alignX - lw / 2
+                                 : align === 'right'  ? alignX - lw
+                                 : alignX;
+                        ctx.save();
+                        ctx.strokeStyle = layer.color;
+                        ctx.lineWidth = Math.max(1, layer.w * 0.06);
+                        ctx.beginPath();
+                        ctx.moveTo(ux, lineY + layer.w * 1.05);
+                        ctx.lineTo(ux + lw, lineY + layer.w * 1.05);
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+                });
+                ctx.textAlign = 'left';
             } 
             else if (layer.type === 'shape') {
                 ctx.fillStyle = layer.color;
@@ -561,11 +652,59 @@
         render();
     }
 
+    // テキストスタイル状態
+    let textStyleState = { bold: false, italic: false, underline: false, align: 'center', lineHeight: 1.4 };
+
+    function toggleTextStyle(style) {
+        textStyleState[style] = !textStyleState[style];
+        const btn = document.getElementById('btn-' + style);
+        if (textStyleState[style]) {
+            btn.classList.add('bg-emerald-500/20', 'text-emerald-400', 'border-emerald-500/40');
+            btn.classList.remove('bg-[#2a2a30]', 'text-zinc-300', 'border-[#3a3a40]');
+        } else {
+            btn.classList.remove('bg-emerald-500/20', 'text-emerald-400', 'border-emerald-500/40');
+            btn.classList.add('bg-[#2a2a30]', 'text-zinc-300', 'border-[#3a3a40]');
+        }
+        // 選択中レイヤーに即反映
+        if (appState.selectedLayerIndex !== null && appState.layers[appState.selectedLayerIndex]?.type === 'text') {
+            appState.layers[appState.selectedLayerIndex][style] = textStyleState[style];
+            render();
+        }
+    }
+
+    function setTextAlign(align) {
+        textStyleState.align = align;
+        document.querySelectorAll('.text-align-btn').forEach(b => {
+            b.classList.remove('bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/40');
+            b.classList.add('bg-[#2a2a30]', 'text-zinc-300', 'border-[#3a3a40]');
+        });
+        const btn = document.getElementById('btn-align-' + align);
+        btn.classList.add('bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/40');
+        btn.classList.remove('bg-[#2a2a30]', 'text-zinc-300', 'border-[#3a3a40]');
+        if (appState.selectedLayerIndex !== null && appState.layers[appState.selectedLayerIndex]?.type === 'text') {
+            appState.layers[appState.selectedLayerIndex].align = align;
+            render();
+        }
+    }
+
     function addText() {
         const txt = document.getElementById('text-input').value || 'テキスト';
+        const lh = parseFloat(document.getElementById('text-line-height').value) || 1.4;
         appState.layers.push({
-            type: 'text', text: txt, x: 100, y: 200, w: 70, h: 70, angle: 0, opacity: 1,
-            fontFamily: document.getElementById('text-font').value, color: document.getElementById('text-color').value, realW: 200, realH: 70
+            type: 'text',
+            text: txt,
+            x: 100, y: 200,
+            w: 70,   // フォントサイズ(px)
+            h: 70,
+            angle: 0, opacity: 1,
+            fontFamily: document.getElementById('text-font').value,
+            color: document.getElementById('text-color').value,
+            bold: textStyleState.bold,
+            italic: textStyleState.italic,
+            underline: textStyleState.underline,
+            align: textStyleState.align,
+            lineHeight: lh,
+            realW: 200, realH: 70
         });
         appState.selectedLayerIndex = appState.layers.length - 1;
         render();
@@ -655,6 +794,7 @@
 
         if (layer.type === 'shape' && layer.shapeType !== 'line') {
             containerY.classList.remove('hidden');
+            document.getElementById('container-text-width').classList.add('hidden');
             document.getElementById('label-size-x').innerText = "幅 (横サイズ)";
             document.getElementById('label-size-y').innerText = "高さ (縦サイズ)";
             sizeXInput.value = layer.w; sizeYInput.value = layer.h;
@@ -662,14 +802,48 @@
             document.getElementById('val-size-y').innerText = layer.h + " px";
         } else if (layer.type === 'shape' && layer.shapeType === 'line') {
             containerY.classList.add('hidden');
+            document.getElementById('container-text-width').classList.add('hidden');
             document.getElementById('label-size-x').innerText = "線の長さ";
             sizeXInput.value = layer.w;
             document.getElementById('val-size-x').innerText = layer.w + " px";
         } else if (layer.type === 'text') {
             containerY.classList.add('hidden');
+            document.getElementById('container-text-width').classList.remove('hidden');
             document.getElementById('label-size-x').innerText = "文字サイズ";
             sizeXInput.max = 500; sizeXInput.value = layer.w;
             document.getElementById('val-size-x').innerText = layer.w + " pt";
+            const tw = layer.textWidth || 0;
+            document.getElementById('object-text-width').value = tw || 600;
+            document.getElementById('val-text-width').innerText = tw > 0 ? tw + ' px' : 'なし';
+
+            // テキストスタイルUIをレイヤーの状態に同期
+            ['bold', 'italic', 'underline'].forEach(s => {
+                const btn = document.getElementById('btn-' + s);
+                if (!btn) return;
+                if (layer[s]) {
+                    btn.classList.add('bg-emerald-500/20', 'text-emerald-400', 'border-emerald-500/40');
+                    btn.classList.remove('bg-[#2a2a30]', 'text-zinc-300', 'border-[#3a3a40]');
+                } else {
+                    btn.classList.remove('bg-emerald-500/20', 'text-emerald-400', 'border-emerald-500/40');
+                    btn.classList.add('bg-[#2a2a30]', 'text-zinc-300', 'border-[#3a3a40]');
+                }
+                textStyleState[s] = !!layer[s];
+            });
+            const align = layer.align || 'left';
+            document.querySelectorAll('.text-align-btn').forEach(b => {
+                b.classList.remove('bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/40');
+                b.classList.add('bg-[#2a2a30]', 'text-zinc-300', 'border-[#3a3a40]');
+            });
+            const ab = document.getElementById('btn-align-' + align);
+            if (ab) {
+                ab.classList.add('bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/40');
+                ab.classList.remove('bg-[#2a2a30]', 'text-zinc-300', 'border-[#3a3a40]');
+            }
+            textStyleState.align = align;
+            const lh = layer.lineHeight || 1.4;
+            document.getElementById('text-line-height').value = lh;
+            document.getElementById('text-line-height-value').innerText = lh.toFixed(1);
+            textStyleState.lineHeight = lh;
         } else if (layer.type === 'image') {
             containerY.classList.remove('hidden');
             document.getElementById('label-size-x').innerText = "画像幅";
@@ -986,6 +1160,27 @@
             if (appState.selectedLayerIndex !== null) {
                 appState.layers[appState.selectedLayerIndex].opacity = parseFloat(e.target.value);
                 document.getElementById('opacity-slider-value').innerText = Math.round(parseFloat(e.target.value) * 100) + '%';
+                render();
+            }
+        });
+
+        // テキストエリア幅スライダー
+        document.getElementById('object-text-width').addEventListener('input', (e) => {
+            if (appState.selectedLayerIndex !== null && appState.layers[appState.selectedLayerIndex]?.type === 'text') {
+                const val = parseInt(e.target.value);
+                appState.layers[appState.selectedLayerIndex].textWidth = val;
+                document.getElementById('val-text-width').innerText = val + ' px';
+                render();
+            }
+        });
+
+        // 行間スライダー
+        document.getElementById('text-line-height').addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            document.getElementById('text-line-height-value').innerText = val.toFixed(1);
+            textStyleState.lineHeight = val;
+            if (appState.selectedLayerIndex !== null && appState.layers[appState.selectedLayerIndex]?.type === 'text') {
+                appState.layers[appState.selectedLayerIndex].lineHeight = val;
                 render();
             }
         });
